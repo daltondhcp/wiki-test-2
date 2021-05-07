@@ -11,6 +11,8 @@ on:
       - "docs/wiki/**"
 
 env:
+  temp_dir_wiki_clone: "wiki-docs-cloned"
+  temp_dir_wiki_to_sync: "wiki-docs-to-sync"
   wiki_source_dir: "docs/wiki/"
   wiki_target_repo: "jtracey93/wiki-test-2"
   github_user_name: "github-actions"
@@ -26,31 +28,39 @@ jobs:
 
       - name: Create temp directories
         run: |
-          mkdir wiki-docs-to-sync
-          mkdir wiki-docs-cloned
-          
+          mkdir $temp_dir_wiki_to_sync
+          mkdir $temp_dir_wiki_clone
+        working-directory: ./temp
+
       - name: Local repository checkout
         uses: actions/checkout@v2
         with:
-          path: wiki-docs-cloned
+          path: "./temp/$temp_dir_wiki_clone"
+          
 
       - name: Configure git and pull existing wiki
         run: |
-          cd wiki-docs-to-sync
           pwd
           git init
           git config --global user.name $github_user_name
           git config --global user.email $github_email
-          git pull https://$GITHUB_TOKEN@github.com/$wiki_target_repo.wiki.git 
+          git pull https://$GITHUB_TOKEN@github.com/$wiki_target_repo.wiki.git
+        working-directory: "./temp/$temp_dir_wiki_to_sync"
           
-      - name: Copy wiki docs to wiki-docs-to-sync and push to wiki git repo
+      - name: Copy & overwrite wiki docs to temp_dir_wiki_to_sync
         run: |
-          cd "wiki-docs-cloned/$wiki_source_dir"
           pwd
-          cp -rf . ../../../wiki-docs-to-sync/
-          cd ../../../wiki-docs-to-sync/
+          cp -rf . ./temp/$temp_dir_wiki_to_sync
+          git add .
+          git commit -m "$github_commit_message"
+          git push --set-upstream https://$GITHUB_TOKEN@github.com/$wiki_target_repo.wiki.git master
+        working-directory: "./temp/$temp_dir_wiki_clone/$wiki_source_dir"
+
+      - name: Create temp directories
+        run: |
           pwd
           git add .
           git commit -m "$github_commit_message"
           git push --set-upstream https://$GITHUB_TOKEN@github.com/$wiki_target_repo.wiki.git master
+        working-directory: "./temp/$temp_dir_wiki_to_sync"
           
