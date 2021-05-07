@@ -37,6 +37,7 @@ jobs:
       - name: Configure git and pull existing wiki
         run: |
           cd wiki-docs-to-sync
+          pwd
           git init
           git config --global user.name $github_user_name
           git config --global user.email $github_email
@@ -44,9 +45,11 @@ jobs:
           
       - name: Copy wiki docs to wiki-docs-to-sync and push to wiki git repo
         run: |
-          cd wiki-docs-cloned/docs/wiki
+          cd "wiki-docs-cloned/$wiki_source_dir"
+          pwd
           cp -rf . ../../../wiki-docs-to-sync/
           cd ../../../wiki-docs-to-sync/
+          pwd
           git add .
           git commit -m "$github_commit_message"
           git push --set-upstream https://$GITHUB_TOKEN@github.com/$wiki_target_repo.wiki.git master
