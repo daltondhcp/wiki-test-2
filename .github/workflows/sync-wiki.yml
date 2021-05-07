@@ -26,18 +26,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - name: Create temp directories
+      - name: Create temp directory
         run: |
+          pwd
+          mkdir temp
           mkdir $temp_dir_wiki_to_sync
           mkdir $temp_dir_wiki_clone
-        working-directory: ./temp
+        working-directory: ${{ env.GITHUB_WORKSPACE }}
+
+      - name: Create wiki temp directories
+        run: |
+          pwd
+          mkdir $temp_dir_wiki_to_sync
+          mkdir $temp_dir_wiki_clone
+        working-directory: "${{ env.GITHUB_WORKSPACE }}/temp"
 
       - name: Local repository checkout
         uses: actions/checkout@v2
         with:
-          path: "./temp/$temp_dir_wiki_clone"
+          path: "${{ env.GITHUB_WORKSPACE }}/temp/$temp_dir_wiki_clone"
           
-
       - name: Configure git and pull existing wiki
         run: |
           pwd
@@ -56,7 +64,7 @@ jobs:
           git push --set-upstream https://$GITHUB_TOKEN@github.com/$wiki_target_repo.wiki.git master
         working-directory: "./temp/$temp_dir_wiki_clone/$wiki_source_dir"
 
-      - name: Create temp directories
+      - name: Stage and push files to wiki git repo
         run: |
           pwd
           git add .
