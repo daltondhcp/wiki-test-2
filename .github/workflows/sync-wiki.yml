@@ -30,8 +30,7 @@ jobs:
         run: |
           pwd
           mkdir temp
-          mkdir $temp_dir_wiki_to_sync
-          mkdir $temp_dir_wiki_clone
+          ls -l
         working-directory: ${{ env.GITHUB_WORKSPACE }}
 
       - name: Create wiki temp directories
@@ -39,7 +38,7 @@ jobs:
           pwd
           mkdir $temp_dir_wiki_to_sync
           mkdir $temp_dir_wiki_clone
-        working-directory: "${{ env.GITHUB_WORKSPACE }}/temp"
+        working-directory: "$GITHUB_WORKSPACE/temp"
 
       - name: Local repository checkout
         uses: actions/checkout@v2
