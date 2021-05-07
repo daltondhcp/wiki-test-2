@@ -9,6 +9,7 @@ on:
       - main
     paths:
       - "docs/wiki/**"
+  workflow_dispatch: {}
 
 env:
   temp_dir_wiki_clone: "wiki-docs-cloned"
