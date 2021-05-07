@@ -1,0 +1,53 @@
+name: Sync Wiki
+
+####################################################################
+# Start the job when the wiki folder is updated in the main branch #
+####################################################################
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/wiki/**"
+
+env:
+  wiki_source_dir: "docs/wiki/"
+  wiki_target_repo: "jtracey93/wiki-test-2"
+  github_user_name: "github-actions"
+  github_email: "action@github.com"
+  github_commit_message: "GitHub Action syncing wiki from docs/wiki/"
+  
+
+jobs:
+  sync-wiki-to-main:
+    name: Sync Wiki
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Create temp directories
+        run: |
+          mkdir wiki-docs-to-sync
+          mkdir wiki-docs-cloned
+          
+      - name: Local repository checkout
+        uses: actions/checkout@v2
+        with:
+          path: wiki-docs-cloned
+
+      - name: Configure git and pull existing wiki
+        run: |
+          cd wiki-docs-to-sync
+          git init
+          git config --global user.name $github_user_name
+          git config --global user.email $github_email
+          git pull https://$GITHUB_TOKEN@github.com/$wiki_target_repo.wiki.git 
+          
+      - name: Copy wiki docs to wiki-docs-to-sync and push to wiki git repo
+        run: |
+          cd wiki-docs-cloned/docs/wiki
+          cp -rf . ../../../wiki-docs-to-sync/
+          cd ../../../wiki-docs-to-sync/
+          git add .
+          git commit -m "$github_commit_message"
+          git push --set-upstream https://$GITHUB_TOKEN@github.com/$wiki_target_repo.wiki.git master
+          
