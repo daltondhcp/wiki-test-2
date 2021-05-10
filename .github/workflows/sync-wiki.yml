@@ -41,16 +41,17 @@ jobs:
       - name: Sync Docs/Wiki Into Wiki Repo
         run: |
           DIFF=$(diff -qr --exclude=.git $wiki_source_repo_dir $wiki_target_repo || true)
-          echo "::set-output name=diff::$DIFF"
+          
           if [ "$DIFF" != "" ]; then
             rsync -avzr --delete --exclude='.git/' "$wiki_source_repo_dir/" "$wiki_target_repo"
           else
             echo "No file diff between $wiki_source_repo_dir and $wiki_target_repo. Exiting."
+            echo "DIFF=$DIFF" >> $GITHUB_ENV
           fi
         working-directory: ${{ env.GITHUB_WORKSPACE }}
 
       - name: Stage & Push Files Into Wiki Repo
-        if: ${{ steps.vars.outputs.diff }} != ""
+        if: ${{ env.DIFF }} != ""
         run: |
           git add .
           git commit -m "$github_commit_message [$GITHUB_ACTOR/${GITHUB_SHA::8}]"
