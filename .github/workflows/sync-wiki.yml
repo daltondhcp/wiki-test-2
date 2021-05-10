@@ -51,9 +51,10 @@ jobs:
         working-directory: ${{ env.GITHUB_WORKSPACE }}
 
       - name: Stage & Push Files Into Wiki Repo
-        if: ${{ env.DIFF }} != ""
         run: |
-          git add .
-          git commit -m "$github_commit_message [$GITHUB_ACTOR/${GITHUB_SHA::8}]"
-          git push --set-upstream https://$GITHUB_TOKEN@github.com/$wiki_target_repo.git master
+          if [${DIFF} != ""]; then
+            git add .
+            git commit -m "$github_commit_message [$GITHUB_ACTOR/${GITHUB_SHA::8}]"
+            git push --set-upstream https://$GITHUB_TOKEN@github.com/$wiki_target_repo.git master
+          fi
         working-directory: ${{ env.wiki_target_repo }}
