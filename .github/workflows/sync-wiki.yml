@@ -40,11 +40,11 @@ jobs:
 
       - name: Sync Docs/Wiki Into Wiki Repo
         run: |
-          echo "DIFF=`$(diff -qr --exclude=.git $wiki_source_repo_dir $wiki_target_repo || true)`" >> $GITHUB_ENV
+          echo "DIFF=`diff -qr --exclude=.git $wiki_source_repo_dir $wiki_target_repo || true`" >> $GITHUB_ENV
           if [ "$DIFF" != "" ]; then
             rsync -avzr --delete --exclude='.git/' "$wiki_source_repo_dir/" "$wiki_target_repo"
           else
-            warning "No file diff between $wiki_source_repo_dir and $wiki_target_repo. Exiting."
+            echo "No file diff between $wiki_source_repo_dir and $wiki_target_repo. Exiting."
           fi
         working-directory: ${{ env.GITHUB_WORKSPACE }}
 
