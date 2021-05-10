@@ -1,74 +1,57 @@
-name: Sync Wiki
+name: Docs/Wiki Sync
 
-####################################################################
-# Start the job when the wiki folder is updated in the main branch #
-####################################################################
 on:
   push:
     branches:
       - main
     paths:
       - "docs/wiki/**"
-  workflow_dispatch: {}
 
 env:
-  temp_dir_wiki_clone: "wiki-docs-cloned"
-  temp_dir_wiki_to_sync: "wiki-docs-to-sync"
-  wiki_source_dir: "docs/wiki/"
-  wiki_target_repo: "jtracey93/wiki-test-2"
+  wiki_source_repo: "daltondhcp/wiki-test-2"
+  wiki_source_repo_dir: "daltondhcp/wiki-test-2/docs/wiki"
+  wiki_target_repo: "daltondhcp/wiki-test-2.wiki"
   github_user_name: "github-actions"
-  github_email: "action@github.com"
-  github_commit_message: "GitHub Action syncing wiki from docs/wiki/"
-  
+  github_email: "41898282+github-actions[bot]@users.noreply.github.com"
+  github_commit_message: "Wiki Sync from docs/wiki"
 
 jobs:
-  sync-wiki-to-main:
+  sync-wiki:
     name: Sync Wiki
     runs-on: ubuntu-latest
     steps:
-
-      - name: Create temp directory
-        run: |
-          pwd
-          mkdir temp
-          ls -l
-        working-directory: ${{ env.GITHUB_WORKSPACE }}
-
-      - name: Create wiki temp directories
-        run: |
-          pwd
-          mkdir $temp_dir_wiki_to_sync
-          mkdir $temp_dir_wiki_clone
-        working-directory: "$GITHUB_WORKSPACE/temp"
-
-      - name: Local repository checkout
+      - name: Checkout Source Repo
         uses: actions/checkout@v2
         with:
-          path: "${{ env.GITHUB_WORKSPACE }}/temp/$temp_dir_wiki_clone"
-          
-      - name: Configure git and pull existing wiki
+          repository: ${{ env.wiki_source_repo }}
+          path: ${{ env.wiki_source_repo }}
+
+      - name: Checkout Wiki Repo
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ env.wiki_target_repo }}
+          path: ${{ env.wiki_target_repo }}
+
+      - name: Configure Local Git
         run: |
-          pwd
-          git init
           git config --global user.name $github_user_name
           git config --global user.email $github_email
-          git pull https://$GITHUB_TOKEN@github.com/$wiki_target_repo.wiki.git
-        working-directory: "./temp/$temp_dir_wiki_to_sync"
-          
-      - name: Copy & overwrite wiki docs to temp_dir_wiki_to_sync
-        run: |
-          pwd
-          cp -rf . ./temp/$temp_dir_wiki_to_sync
-          git add .
-          git commit -m "$github_commit_message"
-          git push --set-upstream https://$GITHUB_TOKEN@github.com/$wiki_target_repo.wiki.git master
-        working-directory: "./temp/$temp_dir_wiki_clone/$wiki_source_dir"
+        working-directory: ${{ env.GITHUB_WORKSPACE }}
 
-      - name: Stage and push files to wiki git repo
+      - name: Sync Docs/Wiki Into Wiki Repo
         run: |
-          pwd
+          echo "DIFF=`$(diff -qr --exclude=.git $wiki_source_repo_dir $wiki_target_repo || true)`" >> $GITHUB_ENV
+          if [ "$DIFF" != "" ]; then
+            rsync -avzr --delete --exclude='.git/' "$wiki_source_repo_dir/" "$wiki_target_repo"
+          else
+            warning "No file diff between $wiki_source_repo_dir and $wiki_target_repo. Exiting."
+          fi
+        working-directory: ${{ env.GITHUB_WORKSPACE }}
+
+      - name: Stage & Push Files Into Wiki Repo
+        if: $DIFF != ""
+        run: |
           git add .
-          git commit -m "$github_commit_message"
-          git push --set-upstream https://$GITHUB_TOKEN@github.com/$wiki_target_repo.wiki.git master
-        working-directory: "./temp/$temp_dir_wiki_to_sync"
-          
+          git commit -m "$github_commit_message [$GITHUB_ACTOR/${GITHUB_SHA::8}]"
+          git push --set-upstream https://$GITHUB_TOKEN@github.com/$wiki_target_repo.git master
+        working-directory: ${{ env.wiki_target_repo }}
